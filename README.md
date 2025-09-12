@@ -18,7 +18,7 @@ It is designed to showcase both **cloud architecture skills** and **AI/ML integr
 - [x] S3 bucket created and secured  
 - [x] DynamoDB setup  
 - [x] Lambda functions for file processing  
-- [ ] Bedrock integration for AI insights  
+- [x] Bedrock integration for AI insights  
 - [ ] API Gateway for exposing endpoints  
 - [ ] Frontend / dashboard (optional)  
 

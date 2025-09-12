@@ -13,6 +13,8 @@ test2-report.txt
 
 # Ignore build artifacts (lambda packages)
 *.zip
+venv/
+.env
 
 # Python cache / build
 __pycache__/
