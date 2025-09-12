@@ -1,9 +1,25 @@
-# Ignore AWS credentials and keys
+# Ignore AWS credentials and private keys
 *.pem
 *.key
 .aws/
-*.txt
+
+# Ignore local output/log files
+output.txt
+*.log
+
+# Ignore test data if you don’t want them in Git
+test-report.txt
+test2-report.txt
+
+# Ignore build artifacts (lambda packages)
+*.zip
+
+# Python cache / build
+__pycache__/
+*.pyc
+*.pyo
 
 # OS / editor junk
 .DS_Store
 *.swp
+
