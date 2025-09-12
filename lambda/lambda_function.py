@@ -11,6 +11,18 @@ dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(TABLE_NAME)
 
 def lambda_handler(event, context):
+    # Safety check: If no Records (manual invoke), create dummy event
+    if 'Records' not in event:
+        print("No S3 event detected, running test mode")
+        event = {
+            'Records': [{
+                's3': {
+                    'bucket': {'name': 'med-reports-2025'},
+                    'object': {'key': 'test-report.txt'}
+                }
+            }]
+        }
+
     for record in event['Records']:
         s3_bucket = record['s3']['bucket']['name']
         s3_key = record['s3']['object']['key']
