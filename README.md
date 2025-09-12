@@ -16,7 +16,7 @@ It is designed to showcase both **cloud architecture skills** and **AI/ML integr
 
 ## Current Progress  
 - [x] S3 bucket created and secured  
-- [ ] DynamoDB setup  
+- [x] DynamoDB setup  
 - [ ] Lambda functions for file processing  
 - [ ] Bedrock integration for AI insights  
 - [ ] API Gateway for exposing endpoints  

@@ -1,0 +1,9 @@
+# Ignore AWS credentials and keys
+*.pem
+*.key
+.aws/
+*.txt
+
+# OS / editor junk
+.DS_Store
+*.swp
