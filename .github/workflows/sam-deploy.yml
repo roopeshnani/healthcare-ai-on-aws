@@ -34,7 +34,7 @@ jobs:
           python3 -m pip install aws-sam-cli
 
       - name: Build SAM app
-        run: sam build --template-file infra/sam-template.yaml
+        run: sam build --template-file infra/template.yml
 
       - name: Deploy SAM app
         env:
@@ -49,9 +49,9 @@ jobs:
             echo "SAM_STACK_NAME secret is required"; exit 1
           fi
           if [ -n "$NAME_PREFIX" ]; then
-            sam deploy --template-file infra/sam-template.yaml --stack-name "$STACK_NAME" --s3-bucket "$S3_BUCKET" --parameter-overrides NamePrefix=$NAME_PREFIX --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region ${{ secrets.AWS_REGION }} --no-confirm-changeset --no-fail-on-empty-changeset
+            sam deploy --template-file infra/template.yml --stack-name "$STACK_NAME" --s3-bucket "$S3_BUCKET" --parameter-overrides NamePrefix=$NAME_PREFIX --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region ${{ secrets.AWS_REGION }} --no-confirm-changeset --no-fail-on-empty-changeset
           else
-            sam deploy --template-file infra/sam-template.yaml --stack-name "$STACK_NAME" --s3-bucket "$S3_BUCKET" --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region ${{ secrets.AWS_REGION }} --no-confirm-changeset --no-fail-on-empty-changeset
+            sam deploy --template-file infra/template.yml --stack-name "$STACK_NAME" --s3-bucket "$S3_BUCKET" --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region ${{ secrets.AWS_REGION }} --no-confirm-changeset --no-fail-on-empty-changeset
           fi
 
       - name: Show Stack Outputs
