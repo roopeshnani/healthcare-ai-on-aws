@@ -102,5 +102,16 @@
       ],
       "Resource": "*"
     }
+      ,
+      {
+        "Sid": "RoleCleanup",
+        "Effect": "Allow",
+        "Action": [
+          "iam:DeleteRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:DeleteRole"
+        ],
+        "Resource": "arn:aws:iam::${AWS::AccountId}:role/*"
+      }
   ]
 }
