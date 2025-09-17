@@ -43,7 +43,6 @@ Resources:
   BedrockFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${NamePrefix}-BedrockSummarizer"
       Handler: bedrock_lambda.lambda_handler
       CodeUri: ../lambda/
       MemorySize: 128
@@ -64,10 +63,9 @@ Resources:
   RootFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${NamePrefix}-RootHandler"
       Handler: root_handler.lambda_handler
       CodeUri: ../lambda/
-      MemorySize: 64
+      MemorySize: 128
       Events:
         RootGet:
           Type: Api
@@ -83,7 +81,6 @@ Resources:
   BedrockFunctionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "${NamePrefix}-BedrockSummarizerRole"
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
