@@ -44,7 +44,7 @@
         "iam:GetRole",
         "iam:GetRolePolicy"
       ],
-      "Resource": "arn:aws:iam::838559288637:role/demo-*"
+  "Resource": "arn:aws:iam::838559288637:role/*"
     },
     {
       "Sid": "LambdaAndApiGatewayOps",
