@@ -14,6 +14,8 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     environment: production
+    env:
+      SAM_CLI_TELEMETRY: '0'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
