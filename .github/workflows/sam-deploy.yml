@@ -39,6 +39,12 @@ jobs:
           echo "Workspace root listing:"; ls -la
           echo "infra listing:"; ls -la infra || true
 
+      - name: Debug - find templates and env
+        run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "Finding template files:"; find . -maxdepth 4 -type f -name 'template*.y*' -print || true
+          echo "Print infra/template.yml head (if exists):"; sed -n '1,20p' infra/template.yml || true
+
       - name: Build SAM app
         run: sam build --template-file infra/template.yml
 
