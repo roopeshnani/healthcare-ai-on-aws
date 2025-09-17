@@ -33,6 +33,12 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install aws-sam-cli
 
+      - name: Debug - list workspace
+        run: |
+          echo "PWD: $(pwd)"
+          echo "Workspace root listing:"; ls -la
+          echo "infra listing:"; ls -la infra || true
+
       - name: Build SAM app
         run: sam build --template-file infra/template.yml
 
