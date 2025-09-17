@@ -9,6 +9,7 @@
         "cloudformation:CreateChangeSet",
         "cloudformation:DeleteChangeSet",
         "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
         "cloudformation:DescribeChangeSet",
         "cloudformation:ExecuteChangeSet",
         "cloudformation:UpdateStack",
