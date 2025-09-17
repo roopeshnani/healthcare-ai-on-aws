@@ -61,6 +61,25 @@ Resources:
       # Use a dedicated IAM role with a minimal inline policy suitable for portfolio/demo
       Role: !GetAtt BedrockFunctionRole.Arn
 
+  RootFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${NamePrefix}-RootHandler"
+      Handler: root_handler.lambda_handler
+      CodeUri: ../lambda/
+      MemorySize: 64
+      Events:
+        RootGet:
+          Type: Api
+          Properties:
+            RestApiId: !Ref BedrockApi
+            Path: /
+            Method: get
+      Environment:
+        Variables:
+          DUMMY: "1"
+      Role: !GetAtt BedrockFunctionRole.Arn
+
 Outputs:
   ApiId:
     Description: "API Gateway RestApi Id"
