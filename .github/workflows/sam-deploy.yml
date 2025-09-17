@@ -33,6 +33,11 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install aws-sam-cli
 
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
       - name: Debug - list workspace
         run: |
           echo "PWD: $(pwd)"
