@@ -8,6 +8,7 @@
         "cloudformation:CreateStack",
         "cloudformation:CreateChangeSet",
         "cloudformation:DeleteChangeSet",
+        "cloudformation:GetTemplateSummary",
         "cloudformation:DescribeStacks",
         "cloudformation:DescribeStackEvents",
         "cloudformation:DescribeChangeSet",
