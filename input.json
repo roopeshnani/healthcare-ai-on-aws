@@ -1,1 +1,5 @@
-{"text":"Patient has a fever and cough."}
+{
+  "prompt": "Patient has fever, cough, and sore throat.\n\nReturn only the concise clinical note without any extra text, formatting, or symbols.",
+  "max_gen_len": 50,
+  "temperature": 0.2
+}
