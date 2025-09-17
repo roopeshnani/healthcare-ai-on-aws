@@ -62,8 +62,12 @@ jobs:
           if [ -z "$S3_BUCKET" ]; then
             echo "SAM_PACKAGE_BUCKET secret is required"; exit 1
           fi
+          # If the secret base is empty, fall back to repo-based name to avoid relying on secrets
           if [ -z "$STACK_NAME_BASE" ]; then
-            echo "SAM_STACK_NAME secret is required"; exit 1
+            # use repository name as base (repo owner/repo -> repo)
+            REPO_NAME=$(basename "$GITHUB_REPOSITORY")
+            STACK_NAME_BASE="${REPO_NAME}-stack"
+            echo "SAM_STACK_NAME secret not provided; using fallback base: $STACK_NAME_BASE"
           fi
           # Append a timestamp to create a unique stack name so previous ROLLBACK_COMPLETE stacks won't block
           TS=$(date +%s)
