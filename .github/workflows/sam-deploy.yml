@@ -56,21 +56,34 @@ jobs:
       - name: Deploy SAM app
         env:
           S3_BUCKET: ${{ secrets.SAM_PACKAGE_BUCKET }}
-          STACK_NAME: ${{ secrets.SAM_STACK_NAME }}
+          STACK_NAME_BASE: ${{ secrets.SAM_STACK_NAME }}
           NAME_PREFIX: ${{ secrets.SAM_NAME_PREFIX }}
         run: |
           if [ -z "$S3_BUCKET" ]; then
             echo "SAM_PACKAGE_BUCKET secret is required"; exit 1
           fi
-          if [ -z "$STACK_NAME" ]; then
+          if [ -z "$STACK_NAME_BASE" ]; then
             echo "SAM_STACK_NAME secret is required"; exit 1
           fi
+          # Append a timestamp to create a unique stack name so previous ROLLBACK_COMPLETE stacks won't block
+          TS=$(date +%s)
+          STACK_NAME="${STACK_NAME_BASE}-${TS}"
+          echo "Using stack name: $STACK_NAME"
           if [ -n "$NAME_PREFIX" ]; then
             sam deploy --template-file "$GITHUB_WORKSPACE/infra/sam-template.yaml" --stack-name "$STACK_NAME" --s3-bucket "$S3_BUCKET" --parameter-overrides NamePrefix=$NAME_PREFIX --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region ${{ secrets.AWS_REGION }} --no-confirm-changeset --no-fail-on-empty-changeset
           else
             sam deploy --template-file "$GITHUB_WORKSPACE/infra/sam-template.yaml" --stack-name "$STACK_NAME" --s3-bucket "$S3_BUCKET" --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region ${{ secrets.AWS_REGION }} --no-confirm-changeset --no-fail-on-empty-changeset
           fi
 
+          # Save the stack name to a file so the subsequent step can query it
+          echo "$STACK_NAME" > /tmp/stack-name
+
       - name: Show Stack Outputs
         run: |
-          aws cloudformation describe-stacks --stack-name ${{ secrets.SAM_STACK_NAME }} --region ${{ secrets.AWS_REGION }} --query "Stacks[0].Outputs" --output table
+          STACK_NAME="${{ secrets.SAM_STACK_NAME }}"
+          # If deploy wrote the runtime stack name, use that
+          if [ -f /tmp/stack-name ]; then
+            STACK_NAME=$(cat /tmp/stack-name)
+          fi
+          echo "Querying outputs for stack: $STACK_NAME"
+          aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region ${{ secrets.AWS_REGION }} --query "Stacks[0].Outputs" --output table
