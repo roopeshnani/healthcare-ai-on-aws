@@ -1,0 +1,61 @@
+isinstance(event["body"], dict):
+                body = event["body"]
+            else:
+                body = {}
+            input_text = body.get("text")
+
+        # Case C: S3 trigger (for uploaded reports)
+        elif isinstance(event, dict) and "Records" in event:
+            s3_key = event["Records"][0]["s3"]["object"]["key"]
+            input_text = f"New report uploaded: {s3_key}"
+
+        # If nothing was parsed
+        if not input_text:
+            return {
+                "statusCode": 400,
+                "body": json.dumps({"error": "No text provided in payload"})
+            }
+
+        # --- 2. Call Bedrock Model ---
+        response = bedrock.invoke_model(
+            modelId=MODEL_ID,
+            body=json.dumps({
+                "inputText": input_text,
+                "textGenerationConfig": {
+                    "maxTokenCount": 300,
+                    "temperature": 0.7,
+                    "topP": 0.9
+                }
+            })
+        )
+
+        result = json.loads(response["body"].read())
+        summary = result.get("results", [{}])[0].get("outputText", "").strip()
+
+        # --- 3. Save to DynamoDB ---
+        report_id = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+
+        table.put_item(Item={
+            "PatientID": "test-patient",
+            "ReportID": report_id,
+            "InputText": input_text,
+            "Summary": summary,
+            "CreatedAt": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        })
+
+        # --- 4. Return response ---
+        return {
+            "statusCode": 200,
+            "body": json.dumps({
+                "input": input_text,
+                "summary": summary,
+                "dynamodb_status": "saved"
+            })
+        }
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e)})
+        }

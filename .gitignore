@@ -4,24 +4,55 @@
 .aws/
 
 # Ignore local output/log files
-output.txt
-*.log
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Ignore test data if you don’t want them in Git
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+.env
+.env.*
+
+# AWS credentials and keys
+.aws/
+*.pem
+*.key
+
+# Local build / package artifacts
+*.zip
+build/
+dist/
+function.zip
+bedrock_lambda.zip
+bedrock_summarizer.zip
+
+# Logs and local outputs (may contain PII or debug info)
+*.log
+output.txt
+output.json
+input.json
+
+# Test reports
 test-report.txt
 test2-report.txt
 
-# Ignore build artifacts (lambda packages)
-*.zip
-venv/
-.env
-
-# Python cache / build
-__pycache__/
-*.pyc
-*.pyo
-
-# OS / editor junk
+# IDEs and editors
+.vscode/
+.idea/
 .DS_Store
 *.swp
+
+# Python tooling cache
+.pytest_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+
+# Misc
+deploy-user-keys.json
 

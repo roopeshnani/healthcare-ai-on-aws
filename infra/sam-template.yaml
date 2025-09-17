@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  SAM template for Healthcare AI on AWS — deploys Bedrock summarizer Lambda,
+  API Gateway endpoint, and DynamoDB table in one stack.
+Parameters:
+  NamePrefix:
+    Type: String
+    Default: "demo"
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.11
+
+Resources:
+  BedrockApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${NamePrefix}-BedrockSummarizerApi"
+      StageName: Prod
+      Cors:
+        AllowMethods: "POST,OPTIONS"
+        AllowHeaders: "Content-Type,Authorization"
+        AllowOrigin: "*"
+
+  PatientReports:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${NamePrefix}-PatientReports"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PatientID
+          AttributeType: S
+        - AttributeName: ReportID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PatientID
+          KeyType: HASH
+        - AttributeName: ReportID
+          KeyType: RANGE
+
+  BedrockFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${NamePrefix}-BedrockSummarizer"
+      Handler: bedrock_lambda.lambda_handler
+      CodeUri: ../lambda/
+      MemorySize: 128
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            RestApiId: !Ref BedrockApi
+            Path: /summarize
+            Method: post
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref PatientReports
+          BEDROCK_MODEL_ID: amazon.titan-text-express-v1
+      # Use a dedicated IAM role with a minimal inline policy suitable for portfolio/demo
+      Role: !GetAtt BedrockFunctionRole.Arn
+
+Outputs:
+  ApiId:
+    Description: "API Gateway RestApi Id"
+    Value: !Ref BedrockApi
+
+  ApiEndpoint:
+    Description: "Invoke URL for summarize endpoint"
+    Value: !Sub "https://${BedrockApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/summarize"
+
+  LambdaFunctionArn:
+    Description: "BedrockSummarizer Lambda ARN"
+    Value: !GetAtt BedrockFunction.Arn
+
+  DynamoDBTableName:
+    Description: "DynamoDB table name"
+    Value: !Ref PatientReports
+
+  BedrockFunctionRoleArn:
+    Description: "IAM Role ARN for Bedrock Lambda"
+    Value: !GetAtt BedrockFunctionRole.Arn
+
+  BedrockFunctionRoleName:
+    Description: "IAM Role Name for Bedrock Lambda"
+    Value: !GetAtt BedrockFunctionRole.RoleName
+
+
+BedrockFunctionRole:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: !Sub "${NamePrefix}-BedrockSummarizerRole"
+    AssumeRolePolicyDocument:
+      Version: '2012-10-17'
+      Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - lambda.amazonaws.com
+          Action: sts:AssumeRole
+    Path: /
+    Policies:
+      - PolicyName: BedrockLambdaInlinePolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Sid: Logs
+              Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: arn:aws:logs:*:*:*
+            - Sid: DynamoDBAccess
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:Query
+                - dynamodb:UpdateItem
+                - dynamodb:Scan
+              Resource:
+                - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NamePrefix}-PatientReports
+            - Sid: BedrockCalls
+              Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: '*'

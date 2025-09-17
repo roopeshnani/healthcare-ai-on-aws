@@ -1,0 +1,59 @@
+name: SAM Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME || '' }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Install SAM CLI
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install aws-sam-cli
+
+      - name: Build SAM app
+        working-directory: infra
+        run: sam build
+
+      - name: Deploy SAM app
+        working-directory: infra
+        env:
+          S3_BUCKET: ${{ secrets.SAM_PACKAGE_BUCKET }}
+          STACK_NAME: ${{ secrets.SAM_STACK_NAME }}
+          NAME_PREFIX: ${{ secrets.SAM_NAME_PREFIX }}
+        run: |
+          if [ -z "$S3_BUCKET" ]; then
+            echo "SAM_PACKAGE_BUCKET secret is required"; exit 1
+          fi
+          if [ -z "$STACK_NAME" ]; then
+            echo "SAM_STACK_NAME secret is required"; exit 1
+          fi
+          if [ -n "$NAME_PREFIX" ]; then
+            sam deploy --stack-name "$STACK_NAME" --s3-bucket "$S3_BUCKET" --parameter-overrides NamePrefix=$NAME_PREFIX --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region ${{ secrets.AWS_REGION }} --no-confirm-changeset --no-fail-on-empty-changeset
+          else
+            sam deploy --stack-name "$STACK_NAME" --s3-bucket "$S3_BUCKET" --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM --region ${{ secrets.AWS_REGION }} --no-confirm-changeset --no-fail-on-empty-changeset
+          fi
+
+      - name: Show Stack Outputs
+        run: |
+          aws cloudformation describe-stacks --stack-name ${{ secrets.SAM_STACK_NAME }} --region ${{ secrets.AWS_REGION }} --query "Stacks[0].Outputs" --output table

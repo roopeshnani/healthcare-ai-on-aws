@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Healthcare AI - Summarizer</title>
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 640px; margin: 2rem auto; }
+      textarea { width:100%; height:160px; }
+      button { padding:8px 12px; }
+      pre { background:#f6f6f6; padding:12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Healthcare AI - Summarizer (Demo)</h1>
+    <p>Enter patient report text and click <strong>Summarize</strong>. Set the API endpoint below.</p>
+
+    <label>API Endpoint (example):</label>
+    <input id="api" type="text" value="https://zz6ukqzkoe.execute-api.us-east-1.amazonaws.com/dev/summarize" style="width:100%" />
+
+    <label>Report Text</label>
+    <textarea id="text">Patient has fever, cough and sore throat.</textarea>
+    <div style="margin-top:8px">
+      <button id="btn">Summarize</button>
+    </div>
+
+    <h3>Result</h3>
+    <pre id="out">(no result)</pre>
+
+    <script>
+      document.getElementById('btn').addEventListener('click', async function(){
+        const endpoint = document.getElementById('api').value.trim();
+        const text = document.getElementById('text').value;
+        document.getElementById('out').textContent = 'Calling API...';
+        try{
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+          });
+          const data = await res.json();
+          document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+        }catch(err){
+          document.getElementById('out').textContent = 'ERROR: ' + err;
+        }
+      });
+    </script>
+  </body>
+</html>

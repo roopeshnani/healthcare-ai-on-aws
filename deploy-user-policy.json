@@ -1,0 +1,104 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CloudFormationAndChangeSet",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateStack",
+        "cloudformation:CreateChangeSet",
+        "cloudformation:DeleteChangeSet",
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeChangeSet",
+        "cloudformation:ExecuteChangeSet",
+        "cloudformation:UpdateStack",
+        "cloudformation:ValidateTemplate",
+        "cloudformation:GetTemplate"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3PackageBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+        "s3:PutObjectAcl"
+      ],
+      "Resource": [
+        "arn:aws:s3:::healthcare-ai-portfolio-sam-package-1758082430",
+        "arn:aws:s3:::healthcare-ai-portfolio-sam-package-1758082430/*"
+      ]
+    },
+    {
+      "Sid": "IAMCreateAndPassForLambdaRole",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:PutRolePolicy",
+        "iam:AttachRolePolicy",
+        "iam:PassRole",
+        "iam:GetRole",
+        "iam:GetRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::838559288637:role/demo-*"
+    },
+    {
+      "Sid": "LambdaAndApiGatewayOps",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:GetFunction",
+        "apigateway:POST",
+        "apigateway:PUT",
+        "apigateway:GET",
+        "apigateway:DELETE",
+        "apigateway:PATCH"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DynamoDB",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:CreateTable",
+        "dynamodb:DeleteTable",
+        "dynamodb:DescribeTable",
+        "dynamodb:PutItem",
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:us-east-1:838559288637:table/demo-PatientReports",
+        "arn:aws:dynamodb:us-east-1:838559288637:table/roopesh-demo-PatientReports",
+        "arn:aws:dynamodb:us-east-1:838559288637:table/*PatientReports*"
+      ]
+    },
+    {
+      "Sid": "Logs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "arn:aws:logs:*:838559288637:*"
+    },
+    {
+      "Sid": "BedrockInvoke",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: API Gateway REST API for BedrockSummarizer (integrates to existing Lambda)
+Parameters:
+  LambdaName:
+    Type: String
+    Description: Name of existing Lambda function (BedrockSummarizer)
+  ApiName:
+    Type: String
+    Default: BedrockSummarizerAPI
+Resources:
+  BedrockApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Ref ApiName
+  SummarizeResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref BedrockApi
+      ParentId: !GetAtt [BedrockApi, RootResourceId]
+      PathPart: summarize
+  PostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref BedrockApi
+      ResourceId: !Ref SummarizeResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function/${LambdaName}/invocations
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref BedrockApi
+    DependsOn:
+      - PostMethod
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: dev
+      RestApiId: !Ref BedrockApi
+      DeploymentId: !Ref ApiDeployment
+Outputs:
+  ApiEndpoint:
+    Value: !Sub https://${BedrockApi}.execute-api.${AWS::Region}.amazonaws.com/dev/summarize
+    Description: "Invoke URL for the summarize endpoint"
