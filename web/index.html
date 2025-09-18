@@ -32,9 +32,9 @@
     <h1>Healthcare AI - Summarizer (Demo)</h1>
     <p>Enter patient report text and click <strong>Summarize</strong>. Set the API endpoint below.</p>
 
-    <label>API Endpoint (example):</label>
-    <input id="api" type="text" value="https://zz6ukqzkoe.execute-api.us-east-1.amazonaws.com/dev/summarize"
-        style="width:100%" />
+    <label>API Endpoint (paste your ApiEndpoint from CloudFormation outputs)</label>
+    <input id="api" type="text" value=""
+        placeholder="https://<api-id>.execute-api.us-east-1.amazonaws.com/Prod/summarize" style="width:100%" />
 
     <label>Report Text</label>
     <textarea id="text">Patient has fever, cough and sore throat.</textarea>
@@ -46,20 +46,102 @@
     <pre id="out">(no result)</pre>
 
     <script>
+        // Try to prefill endpoint from ?api= query string
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const api = params.get('api');
+            if (api) { document.getElementById('api').value = api; }
+        })();
+
+        function normalizeEndpoint(raw) {
+            if (!raw) return '';
+            let e = raw.trim();
+            // Try to produce an absolute https:// URL that ends with /summarize
+            try {
+                // If user omitted scheme (e.g. pasted api id), try to make it absolute before parsing
+                if (!/^https?:\/\//i.test(e)) {
+                    if (e.startsWith('//')) {
+                        e = 'https:' + e;
+                    }
+                }
+                const url = new URL(e);
+                // If path is empty or '/', use origin + /summarize
+                if (!url.pathname || url.pathname === '/') {
+                    e = url.origin.replace(/\/$/, '') + '/summarize';
+                } else if (url.pathname.endsWith('/summarize')) {
+                    e = url.href;
+                } else if (!url.pathname.includes('summarize')) {
+                    // preserve any additional path segments
+                    e = url.origin.replace(/\/$/, '') + url.pathname.replace(/\/$/, '') + '/summarize';
+                } else {
+                    // fallback to full href
+                    e = url.href;
+                }
+            } catch (ex) {
+                // Repair common cases: domain without scheme (like rx1hmjocmj.execute-api...)
+                if (!/^https?:\/\//i.test(e) && e.includes('.')) {
+                    e = 'https://' + e.replace(/^\/+/, '');
+                    if (!e.endsWith('/summarize')) e = e.replace(/\/$/, '') + '/summarize';
+                } else {
+                    // Last-resort heuristic (relative strings) — make absolute by prefixing https://
+                    if (!e.startsWith('https://') && !e.startsWith('http://')) {
+                        e = 'https://' + e.replace(/^\/+/, '');
+                    }
+                    if (!e.endsWith('/summarize')) e = e.replace(/\/$/, '') + '/summarize';
+                }
+            }
+            return e;
+        }
+
         document.getElementById('btn').addEventListener('click', async function () {
-            const endpoint = document.getElementById('api').value.trim();
+            let endpointInput = document.getElementById('api').value.trim();
             const text = document.getElementById('text').value;
-            document.getElementById('out').textContent = 'Calling API...';
+
+            if (!endpointInput) {
+                document.getElementById('out').textContent = 'ERROR: API endpoint is empty — paste your ApiEndpoint from CloudFormation output (include /summarize) or use ?api=';
+                return;
+            }
+
+            // Do not allow relative endpoints (this avoids POSTing to the local static file server which returns 501)
+            if (!/^https:\/\//i.test(endpointInput)) {
+                document.getElementById('out').textContent = 'ERROR: Please paste the full https:// API endpoint (including domain). Relative URLs are not allowed to avoid accidental POST to the static server.';
+                return;
+            }
+
+            // Normalize the endpoint to ensure it ends with /summarize
+            const endpoint = normalizeEndpoint(endpointInput);
+
+            document.getElementById('out').textContent = 'Calling API: ' + endpoint;
             try {
                 const res = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text })
                 });
-                const data = await res.json();
-                document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+
+                // Read body exactly once as text, then attempt to parse JSON. This avoids "body stream already read" errors.
+                const raw = await res.text();
+
+                if (!res.ok) {
+                    // Try to show JSON if possible, else show raw text
+                    try {
+                        const parsed = JSON.parse(raw);
+                        document.getElementById('out').textContent = 'ERROR ' + res.status + ': ' + JSON.stringify(parsed, null, 2);
+                    } catch (e) {
+                        document.getElementById('out').textContent = 'ERROR ' + res.status + ': ' + raw;
+                    }
+                    return;
+                }
+
+                // Successful response: try to present JSON nicely, fallback to raw text
+                try {
+                    const data = JSON.parse(raw);
+                    document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    document.getElementById('out').textContent = 'Non-JSON response (raw):\n' + raw;
+                }
             } catch (err) {
-                document.getElementById('out').textContent = 'ERROR: ' + err;
+                document.getElementById('out').textContent = 'NETWORK ERROR: ' + err;
             }
         });
     </script>
