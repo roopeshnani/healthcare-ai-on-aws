@@ -19,10 +19,8 @@ Resources:
     Properties:
       Name: !Sub "${NamePrefix}-BedrockSummarizerApi"
       StageName: Prod
-      Cors:
-        AllowMethods: "POST,OPTIONS"
-        AllowHeaders: "Content-Type,Authorization"
-        AllowOrigin: "*"
+      # CORS removed here to avoid API import/mapping errors during stack create.
+      # Lambda functions include CORS headers in their responses.
 
   PatientReports:
     Type: AWS::DynamoDB::Table
@@ -52,7 +50,7 @@ Resources:
           Properties:
             RestApiId: !Ref BedrockApi
             Path: /summarize
-            Method: POST
+            Method: post
       Environment:
         Variables:
           DYNAMODB_TABLE: !Ref PatientReports
@@ -72,7 +70,7 @@ Resources:
           Properties:
             RestApiId: !Ref BedrockApi
             Path: /
-            Method: GET
+            Method: get
       Environment:
         Variables:
           DUMMY: "1"
