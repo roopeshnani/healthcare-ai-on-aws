@@ -138,6 +138,21 @@ def lambda_handler(event, context):
 
         summary = _extract_text_from_bedrock_result(result_json)
 
+        # If the model returned an empty string or a refusal/error message, surface that clearly
+        low = (summary or "").lower()
+        refusal_signals = ["sorry - this model is unable to respond", "unable to respond", "cannot respond", "i'm unable to"]
+        if not summary or any(sig in low for sig in refusal_signals):
+            # Do not save to DynamoDB in this case — return a 502 with the raw response to aid debugging
+            return {
+                "statusCode": 502,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type,Authorization"
+                },
+                "body": json.dumps({"error": "Model unable to generate a summary", "raw": result_json})
+            }
+
         # store to DynamoDB if table configured
         if table:
             try:
