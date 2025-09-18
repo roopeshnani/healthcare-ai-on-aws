@@ -140,7 +140,4 @@ Outputs:
     Description: "IAM Role ARN for Bedrock Lambda"
     Value: !GetAtt BedrockFunctionRole.Arn
 
-  BedrockFunctionRoleName:
-    Description: "IAM Role Name for Bedrock Lambda"
-    Value: !GetAtt BedrockFunctionRole.RoleName
 
